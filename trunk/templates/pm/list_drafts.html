@@ -1,0 +1,7 @@
+{% extends 'pm/list_base.html' %}
+
+{% block list_title %}Drafts{% endblock %}
+
+{% block table_row %}
+<tr><td>#{{ object.id }} <a href="{{ object.get_absolute_url }}">{% if object.subject %}{{ object.subject }}{% else %}<em>no subject</em>{% endif %}</a></td></tr>
+{% endblock %}

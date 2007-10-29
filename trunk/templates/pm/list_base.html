@@ -1,13 +1,13 @@
-{% extends 'pages/base.html' %}
+{% extends 'pm/base.html' %}
 
 {% block bd %}
-<h2>{{ title }}</h2>
+<h2>{% block list_title %}Inbox{% endblock %}</h2>
 <p>{{ hits }} message{{ hits|pluralize }}</p>
 {% if object_list %}
 <table>
 <tbody>
 {% for object in object_list %}
-{% include template_row %}
+{% block table_row %}{% endblock %}
 {% endfor %}
 </tbody>
 </table>

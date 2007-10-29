@@ -11,49 +11,37 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from models import Message, DraftMessage, MessageBox
 from forms import DraftMessageForm, NewMessageForm
 
-paginate_by = 10
-
-def _get_messages(user, manager):
-    if manager == 'inbox':
-        mgr = user.inbox
-    elif manager == 'outbox':
-        mgr = user.outbox
-    else:
-        mgr = user.drafts
-    return mgr.all().select_related(depth=1)
+PAGINATE_BY = 5
 
 
 @login_required
 @transaction.commit_on_success
 def new(request, id=''):
-    if id:
-        draft = get_object_or_404(DraftMessage, pk=id, sender=request.user)
-        initial_data = draft.__dict__
-    else:
-        initial_data = {'recipient_list': request.GET.get(_('recipient'), '')}
+    "Displays a form to compose a new message or edit a draft."
+
+    draft = id and get_object_or_404(DraftMessage, pk=id, sender=request.user) or DraftMessage()
 
     if request.POST:
         if request.POST.has_key('draft'):
             # Save draft
             form = DraftMessageForm(request.POST)
             if form.is_valid():
-                if not id:
-                    draft = DraftMessage()
                 draft.sender = request.user
                 draft.recipient_list = form.cleaned_data['recipient_list']
                 draft.subject = form.cleaned_data['subject']
                 draft.body = form.cleaned_data['body']
                 draft.previous_message = form.cleaned_data['previous_message']
                 draft.save()
-                #TODO Your message was saved
+
+                request.user.message_set.create(message=ugettext('Your draft was saved.'))
+                
                 return HttpResponseRedirect(draft.get_absolute_url())            
         
         else:
             # Send message
             form = NewMessageForm(request.POST)
             if form.is_valid():
-                if id:
-                    draft.delete()
+                id and draft.delete()
                 message = Message.objects.create(
                                                  subject = form.cleaned_data['subject'],
                                                  body = form.cleaned_data['body'],
@@ -64,16 +52,30 @@ def new(request, id=''):
                                               recipient = recipient,
                                               message = message,
                                               )
-                #TODO Your message was sent to...
+
+                request.user.message_set.create(message=ugettext('Your message was sent to %s.' % \
+                    ', '.join([u.username.capitalize() for u in form.cleaned_data['recipient_list']])))
+                
                 return HttpResponseRedirect(reverse('pm_inbox'))
     else:
+        initial_data = id and draft.__dict__ or {'recipient_list': request.GET.get(_('recipient'), '')}
         form = DraftMessageForm(initial=initial_data)
-    return direct_to_template(request, 'pm/message_form.html', {'form': form})
+    return direct_to_template(request, 'pm/form.html', {'form': form})
+
+
+
+def _get_messages(user, manager, filters={}):
+    "Returns a queryset corresponding to a messagebox."
+    try:
+        mgr = getattr(user, manager)
+    except AttributeError:
+        mgr = user.inbox
+    return mgr.all().select_related(depth=1).filter(**filters)
 
 
 @login_required
 def read(request, id, manager='inbox'):
-    
+    "Opens sent and received messages."
     qs = _get_messages(request.user, manager)
         
     return object_detail(request=request,
@@ -83,28 +85,38 @@ def read(request, id, manager='inbox'):
                        )
 
 
-def delete():
-    return
-
 @login_required
 def list(request, manager='inbox'):
-    
+    "Lists messages for inbox, outbox and drafts"
+   
     qs = _get_messages(request.user, manager)
-        
+    # TODO: add filtering and ordering logic in request.GET        
+    
     return object_list(request=request,
                        queryset=qs,
-                       template_name='pm/list.html',
+                       template_name='pm/list_%s.html' % manager,
                        allow_empty=True,
-                       paginate_by=paginate_by,
-                       extra_context={'title': manager.capitalize(),
-                                      'template_row': 'pm/row_%s.html' % manager},
+                       paginate_by=PAGINATE_BY,
                        )
+
+
+def delete(request):
+    "Deletes messages."
+    return
+
+
+def redirect(request):
+    "Redirects to a message according to filters or return to messagebox"
+    return HttpResponseRedirect()
+
 
 def contact_list():
     return
 
+
 def contact_status():
     return
+
 
 
 

@@ -1,0 +1,38 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+ "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+   <title>{% block title %}{% endblock %}</title>
+   <link rel="stylesheet" href="http://yui.yahooapis.com/2.3.1/build/reset-fonts-grids/reset-fonts-grids.css" type="text/css">
+   <link rel="stylesheet" href="/css/master.css" type="text/css">
+</head>
+<body id="bd-{{ app }}">
+<div id="doc4" class="yui-t7">
+   <div id="hd">
+	 <div id="menu">
+		<ul>
+		<li id="m-pm"><a href="/pm/"><span>Messages</span></a></li>
+		</ul>
+	 </div>
+	 <div class="tab">{% block tabs %}{% endblock %}</div>
+   </div>
+   <div id="bd">
+   
+    {% if messages %}
+	<div id="notice" class="yui-g">
+	<ul>{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+	</div>
+	{% endif %}
+
+    {% block bd_div %}
+	<div class="yui-g">
+	{% block bd %}
+	<!-- YOUR DATA GOES HERE -->
+	{% endblock bd %}
+	</div>
+    {% endblock bd_div %}
+   </div>
+   <div id="ft">{% block ft %}{% endblock ft %}</div>
+</div>
+</body>
+</html>
