@@ -1,0 +1,5 @@
+{% extends 'pm/list_base.html' %}
+
+{% block table_row %}
+<tr><td>#{{ object.id }} <a href="{{ object.get_absolute_url }}">{{ object.message }}</a></td></tr>
+{% endblock %}

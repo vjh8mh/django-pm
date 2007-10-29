@@ -8,7 +8,8 @@ from django.contrib.auth.models import User
 
 from formatters import format_subject, format_body
 
-#TODO implemet "core"
+# TODO: "core" ! Read doc, implement...
+
 class Contact(models.Model):
     """
     A contact list used for recipient auto completion and black listing
@@ -48,8 +49,6 @@ class Message(models.Model):
         self.body = format_body(self.body)
         super(Message, self).save()
         
-#    def get_absolute_url(self):
-#        return
 
 class DraftMessage(models.Model):
     """
@@ -91,6 +90,9 @@ class MessageBoxManager(models.Manager):
     """
     def get_query_set(self):
         return MessageFilterQuerySet(self.model)
+    
+    def unread(self):
+        return self.get_query_set().filter(read_at__isnull=True)
 
 
 class MessageBox(models.Model):
@@ -132,15 +134,13 @@ class MessageBox(models.Model):
 
     def save(self):
         if not self.id:
-            now = datetime.now()
-            self.sent_at = now
+            self.sent_at = datetime.now()
             
-            # TODO - verify that self.id != self.previous_message.id or maybe assign a new id when the message is sent
             # Check and edit previous message with reply time
             if self.previous_message:
                 if self.previous_message.recipient == self.sender and \
                             self.previous_message.sender == self.recipient :
-                    self.previous_message.replied_at = now
+                    self.previous_message.replied_at = self.sent_at
                     self.previous_message.save()
                 else:
                     self.previous_message = None

@@ -1,0 +1,7 @@
+{% extends 'pm/list_base.html' %}
+
+{% block list_title %}Outbox{% endblock %}
+
+{% block table_row %}
+<tr><td>#{{ object.id }} <a href="{{ object.get_absolute_url_for_outbox }}">{{ object.message }}</a></td></tr>
+{% endblock %}

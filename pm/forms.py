@@ -41,20 +41,19 @@ class NewMessageForm(DraftMessageForm):
         if not rcpt_list:
             raise forms.ValidationError(self.fields['recipient_list'].error_messages['required'])
         
-        self.valid_recipients = set()
+        self.valid_recipients = {}
         recipients_re.sub(self._validate_user, rcpt_list)
         
-        if len(self.valid_recipients) > 0:
-            return self.valid_recipients
-        else:
+        if len(self.valid_recipients) == 0:
             raise forms.ValidationError(ugettext("Couldn't find any of your recipients."))
+        return [u for u in self.valid_recipients.values()]
 
     def _validate_user(self, m):
         try:
             user = User.objects.get(username=m.group(1))
         except User.DoesNotExist:
             return
-        self.valid_recipients.add(user)
+        self.valid_recipients[user.id] = user
         
     def clean_subject(self):
         return format_subject(self.cleaned_data['subject'])
