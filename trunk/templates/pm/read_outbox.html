@@ -1,0 +1,10 @@
+{% extends 'pages/base.html' %}
+
+{% block bd %}
+<h2>You sent a message to {{ object.recipient|capfirst }}</h2>
+
+{% if object.message.subject %}<h3>{{ object.message.subject }}</h3>{% endif %}
+
+{{ object.message.body|linebreaksbr }}
+
+{% endblock %}
