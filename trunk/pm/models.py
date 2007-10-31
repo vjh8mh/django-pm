@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import permalink
 from django.db.models.query import QuerySet
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timesince import timesince
 from django.contrib.auth.models import User
 
 from formatters import format_subject, format_body
@@ -18,11 +19,16 @@ class Contact(models.Model):
     owner = models.ForeignKey(User, verbose_name=_('owner'), related_name='contacts')
     contact = models.ForeignKey(User, verbose_name=_('contact'), related_name='others_contacts')
     is_blocked = models.BooleanField(_('is blocked'), default=False)
+    last_message_at = models.DateTimeField(_('last message at'), blank=True,null=True)
 
     class Meta:
+        ordering = ['-last_message_at']
         verbose_name = _('contact')
         verbose_name_plural = _('contacts')
 
+    def __unicode__(self):
+        return self.contact.username.capitalize()
+    
 
 class Message(models.Model):
     """
@@ -48,27 +54,7 @@ class Message(models.Model):
             self.subject = format_subject(self.subject)
         self.body = format_body(self.body)
         super(Message, self).save()
-        
 
-class DraftMessage(models.Model):
-    """
-    Model for drafts
-    
-    """
-    sender = models.ForeignKey(User, verbose_name=_('sender'), related_name='drafts')
-    recipient_list = models.TextField(_('recipients'), blank=True, null=True)
-    subject = models.CharField(_('subject'), maxlength=80, blank=True, null=True)
-    body = models.TextField(_('body'), blank=True, null=True)
-    previous_message = models.IntegerField(_('previous message'), blank=True, null=True)
-    
-    class Meta:
-        verbose_name = _('draft')
-        verbose_name_plural = _('drafts')
-        
-    @permalink
-    def get_absolute_url(self):
-        return ('pm_draft', [str(self.id)])
-    
 
 class MessageFilterQuerySet(QuerySet):
     """
@@ -83,14 +69,51 @@ class MessageFilterQuerySet(QuerySet):
         return super(MessageFilterQuerySet, self)._filter_or_exclude(mapper, *args, **kwargs)
 
 
-class MessageBoxManager(models.Manager):
+class DraftMessageManager(models.Manager):
     """ 
-    Custom manager for the ``MessageBox`` model
+    Custom manager for the ``DraftMessage`` model
     
     """
     def get_query_set(self):
         return MessageFilterQuerySet(self.model)
+           
+
+       
+class DraftMessage(models.Model):
+    """
+    Model for drafts
     
+    """
+    sender = models.ForeignKey(User, verbose_name=_('sender'), related_name='drafts')
+    recipient_list = models.TextField(_('recipients'), blank=True, null=True)
+    subject = models.CharField(_('subject'), maxlength=80, blank=True, null=True)
+    body = models.TextField(_('body'), blank=True, null=True)
+    previous_message = models.IntegerField(_('previous message'), blank=True, null=True)
+    sender_delete_at = models.DateTimeField(_('deleted by sender'), blank=True,null=True)
+    
+    objects = DraftMessageManager()
+
+    def delete_flag(self, user, time):
+        if self.sender == user:
+            self.sender_delete_at = time
+            self.save()
+            return True
+        
+    class Meta:
+        verbose_name = _('draft')
+        verbose_name_plural = _('drafts')
+        
+    @permalink
+    def get_absolute_url(self):
+        return ('pm_draft', [str(self.id)])
+
+
+class MessageBoxManager(DraftMessageManager):
+    """ 
+    Custom manager for the ``MessageBox`` model
+    
+    """
+         
     def unread(self):
         return self.get_query_set().filter(read_at__isnull=True)
 
@@ -104,7 +127,7 @@ class MessageBox(models.Model):
     recipient = models.ForeignKey(User, verbose_name=_('recipients'), related_name='inbox')
     message = models.ForeignKey(Message, verbose_name=_('message'), related_name='enveloppes')
     
-    # history
+    # status
     sent_at = models.DateTimeField(_('sent'))
     read_at = models.DateTimeField(_('read'), blank=True, null=True) # first time
     replied_at = models.DateTimeField(_('replied'), blank=True,null=True) # last time
@@ -117,6 +140,31 @@ class MessageBox(models.Model):
     
     objects = MessageBoxManager()
 
+    # inbox status
+    @property
+    def status(self):
+        if self.read_at:
+            return self.replied_at and 'replied' or 'read'
+        else:
+            return 'new'
+
+    @property
+    def sent_at_since(self):
+        return timesince(self.sent_at).split(',', 1)[0]
+    
+    def delete_flag(self, user, time):
+        trigger = False
+        if self.sender == user:
+            self.sender_delete_at = time
+            trigger = True
+        if self.recipient == user:
+            self.recipient_delete_at = time
+            trigger = True
+        if trigger:
+            self.save()
+            return True
+        
+        
     class Meta:
         ordering = ['-id']
         verbose_name = _('message')
@@ -154,19 +202,19 @@ class MessageBox(models.Model):
                 
             sender_contact, c = Contact.objects.get_or_create(owner=self.sender,
                                                               contact=self.recipient)
-            if sender_contact.is_blocked:
-                # if the recipient was previously blocked by the sender, unblock him
-                sender_contact.is_blocked = False
-                sender_contact.save()
+            sender_contact.last_message_at = self.sent_at
+            # if the recipient was previously blocked by the sender, unblock him
+            sender_contact.is_blocked = False
+            sender_contact.save()
                 
         super(MessageBox, self).save()        
 
         
     @permalink
     def get_absolute_url(self):
-        return ('pm_received', [str(self.id)])
+        return ('pm_inbox_read', [str(self.id)])
     
     @permalink
     def get_absolute_url_for_outbox(self):
-        return ('pm_sent', [str(self.id)])
+        return ('pm_outbox_read', [str(self.id)])
     

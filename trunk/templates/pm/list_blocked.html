@@ -1,0 +1,12 @@
+{% extends 'pm/list_base.html' %}
+
+{% block list_title %}Contacts : {{ hits }} person{{ hits|pluralize }}{% endblock %}
+
+{% block contact_filter %}{% endblock %}
+
+{% block table_row %}
+<tr><td>{{ object }}</td><td><a href="{% url pm_contact_unblock object.contact.username %}">unblock</a></td></tr>
+{% endblock %}
+
+{% block delete %}{% endblock %}
+
