@@ -160,10 +160,8 @@ def restore(request, manager, time):
 @login_required
 def delete(request, id, manager='inbox'):
     "Deletes a single message."
-    Box = manager == 'drafts' and DraftMessage or MessageBox
-    lookup = {'pk': id, manager == 'inbox' and 'recipient__pk' or 'sender__pk': request.user.id}
-    
-    message = get_object_or_404(Box, **lookup)
+    mgr = getattr(request.user, manager)    
+    message = get_object_or_404(mgr.all(), id=id)
     
     delete_time = datetime.now()
     message.delete_flag(request.user, delete_time)
