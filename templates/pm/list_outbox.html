@@ -1,7 +1,13 @@
 {% extends 'pm/list_base.html' %}
 
-{% block list_title %}Outbox{% endblock %}
+{% block list_title %}Outbox : {{ hits }} message{{ hits|pluralize }}{% endblock %}
 
 {% block table_row %}
-<tr><td>#{{ object.id }} <a href="{{ object.get_absolute_url_for_outbox }}">{{ object.message }}</a></td></tr>
+<tr>
+<th><input type="checkbox" name="checkbox" value="{{ object.id }}"></th>
+<th><img src="/m/im/replied.gif" width="16" height="16" alt="Sent" /></th>
+<th>{{ object.recipient }}.picture</th>
+<td><a href="{{ object.get_absolute_url_for_outbox }}">{{ object.message }}</a><br>{{ object.recipient|capfirst }}</td>
+<td class="time">{{ object.sent_at_since }}</td>
+</tr>
 {% endblock %}

@@ -1,9 +1,17 @@
 {% extends 'pm/base.html' %}
 
 {% block bd %}
-<h2>{% block list_title %}Inbox{% endblock %}</h2>
-<p>{{ hits }} message{{ hits|pluralize }}</p>
+<h2>{% block list_title %}Inbox : {{ hits }} message{{ hits|pluralize }}{% endblock %}</h2>
+
+{% block contact_filter %}
+<form method="post" action=".">
+Show messages with <input type="text" name="contact" value="{{ contact }}">
+{% if contact %} <a href="../../">all</a>{% endif %}
+</form>
+{% endblock %}
+
 {% if object_list %}
+<form method="post" action="{{ request.get_full_path }}">
 <table>
 <tbody>
 {% for object in object_list %}
@@ -11,8 +19,11 @@
 {% endfor %}
 </tbody>
 </table>
+{% block delete %}<button type="submit" name="delete">Delete selected</button>{% endblock %}
 {% if is_paginated %}{% load paginator %}<div class="paginator">{% paginator 4 %}</div></p>{% endif %}
+</form>
 {% else %}
-<p>No messages here, try to write to someone.</p>
+<p>No results found.</p>
 {% endif %}
+
 {% endblock %}

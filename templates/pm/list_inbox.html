@@ -1,5 +1,11 @@
 {% extends 'pm/list_base.html' %}
 
 {% block table_row %}
-<tr><td>#{{ object.id }} <a href="{{ object.get_absolute_url }}">{{ object.message }}</a></td></tr>
+<tr>
+<th><input type="checkbox" name="checkbox" value="{{ object.id }}"></th>
+<th><img src="/m/im/{{ object.status }}.gif" width="16" height="16" alt="{{ object.status|capfirst }}" /></th>
+<th>{{ object.sender }}.jpg</th>
+<td><a href="{{ object.get_absolute_url }}">{{ object.message }}</a><br>{{ object.sender|capfirst }}</td>
+<td class="time">{{ object.sent_at_since }}</td>
+</tr>
 {% endblock %}
