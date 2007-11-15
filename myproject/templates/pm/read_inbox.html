@@ -1,0 +1,44 @@
+{% extends 'pm/base.html' %}
+
+{% block bd %}
+<h2>You received a message from {{ object.sender|capfirst }}</h2>
+
+{% if object.message.subject %}<h3>{{ object.message.subject }}</h3>{% endif %}
+
+{% if object.previous_message %}
+<p style="color:grey">{{ object.previous_message.message.body|linebreaksbr }}</p>
+{% endif %}
+
+{{ object.message.body|linebreaksbr }}
+
+
+<h3>Actions</h3>
+<ul>
+<li><a href="{% url pm_inbox_delete object.id %}">delete message</a></li>
+<li><a href="{% url pm_inbox_forward object.id %}">forward message</a></li>
+<li><a href="{% url pm_inbox_redirect_up object.id %}">one message up</a></li>
+<li><a href="{% url pm_inbox_redirect object.id %}">one message down</a></li>
+<li><a href="{% url pm_inbox_redirect_list object.id %}">back to inbox</a></li>
+<li><a href="{% url pm_inbox_redirect_up_contact object.id,object.sender %}">one message up from {{ object.sender.username|capfirst }}</a></li>
+<li><a href="{% url pm_inbox_redirect_contact object.id,object.sender %}">one message down from {{ object.sender.username|capfirst }}</a></li>
+<li><a href="{% url pm_inbox_redirect_list_contact object.id,object.sender.username %}">back to messages from {{ object.sender.username|capfirst }}</a></li>
+{% if contact %}{% for url, text in contact.get_block_link_tuple %}<li><a href="{{ url }}">{{ text }}</a></li>{% endfor %}{% endif %}
+</ul>
+
+{% if replies %}
+<h3>You have sent {{ replies|length }} repl{{ replies|length|pluralize:"y,ies" }}</h3>
+<table>
+{% for object in replies %}
+{% include 'pm/row_outbox.html' %}
+{% endfor %}
+</table>
+{% endif %}
+
+<h3>Reply</h3>
+<form method="post" action="{% url pm_new %}">
+<table>
+{{ form.as_table }}
+<tr><th></th><td><button type="submit" name="draft">Save draft</button> <button type="submit">Send</button></td></tr>
+</table>
+</form>
+{% endblock %}

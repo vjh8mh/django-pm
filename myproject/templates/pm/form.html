@@ -2,7 +2,7 @@
 
 {% block bd %}
 <h2>New message</h2>
-<form method="post" action=".">
+<form method="post" action="{% if post_to %}{{ post_to }}{% else %}.{% endif%}">
 <table>
 {{ form.as_table }}
 <tr><th></th><td><button type="submit" name="draft">Save draft</button> <button type="submit">Send</button></td></tr>

@@ -1,0 +1,5 @@
+{% extends 'pm/list_base.html' %}
+
+{% block list_title %}Outbox : {{ hits }} message{{ hits|pluralize }}{% endblock %}
+
+{% block table_row %}{% include 'pm/row_outbox.html' %}{% endblock %}

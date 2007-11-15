@@ -1,0 +1,35 @@
+{% extends 'pm/base.html' %}
+
+{% block bd %}
+<h2>You sent a message to {{ object.recipient|capfirst }}</h2>
+
+{% if object.message.subject %}<h3>{{ object.message.subject }}</h3>{% endif %}
+
+{% if object.previous_message %}
+<p style="color:grey">{{ object.previous_message.message.body|linebreaksbr }}</p>
+{% endif %}
+
+{{ object.message.body|linebreaksbr }}
+
+<h3>Actions</h3>
+<ul>
+<li><a href="{% url pm_outbox_delete object.id %}">delete message</a></li>
+<li><a href="{% url pm_outbox_redirect_up object.id %}">one message up</a></li>
+<li><a href="{% url pm_outbox_redirect object.id %}">one message down</a></li>
+<li><a href="{% url pm_outbox_redirect_up_contact object.id,object.recipient %}">one message up to {{ object.recipient.username|capfirst }}</a></li>
+<li><a href="{% url pm_outbox_redirect_contact object.id,object.recipient %}">one message down to {{ object.recipient.username|capfirst }}</a></li>
+<li><a href="{% url pm_outbox_redirect_list object.id %}">back to outbox</a></li>
+<li><a href="{% url pm_outbox_redirect_list_contact object.id,object.recipient.username %}">back to messages sent to {{ object.recipient.username|capfirst }}</a></li>
+</ul>
+
+{% if replies %}
+<h3>You have received {{ replies|length }} repl{{ replies|length|pluralize:"y,ies" }}</h3>
+<table>
+{% for object in replies %}
+{% include 'pm/row_inbox.html' %}
+{% endfor %}
+</table>
+{% endif %}
+
+<p></p>
+{% endblock %}
