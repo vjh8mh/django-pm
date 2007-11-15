@@ -4,33 +4,36 @@
 <head>
    <title>{% block title %}{% endblock %}</title>
    <link rel="stylesheet" href="http://yui.yahooapis.com/2.3.1/build/reset-fonts-grids/reset-fonts-grids.css" type="text/css">
-   <link rel="stylesheet" href="/css/master.css" type="text/css">
 </head>
-<body id="bd-{{ app }}">
+<body id="bd-{% block app %}{% endblock %}">
 <div id="doc4" class="yui-t7">
    <div id="hd">
 	 <div id="menu">
 		<ul>
-		<li id="m-pm"><a href="/pm/"><span>Messages</span></a></li>
+		<li id="m-mes"><a href="/pm/inbox/"><span>Messages</span></a></li>
 		</ul>
 	 </div>
 	 <div class="tab">{% block tabs %}{% endblock %}</div>
    </div>
    <div id="bd">
-   
-    {% if messages %}
+
+	{% block notification %}
+	{% if notices %}
 	<div id="notice" class="yui-g">
-	<ul>{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+	<ul>
+	{% for notice in notices %}{{ notice.as_html|safe }}{% endfor %}
+	</ul>
 	</div>
 	{% endif %}
+	{% endblock notification %}
 
-    {% block bd_div %}
+    {% block bd %}
 	<div class="yui-g">
-	{% block bd %}
+	{% block bd_content %}
 	<!-- YOUR DATA GOES HERE -->
-	{% endblock bd %}
+	{% endblock bd_content %}
 	</div>
-    {% endblock bd_div %}
+	{% endblock bd %}
    </div>
    <div id="ft">{% block ft %}{% endblock ft %}</div>
 </div>

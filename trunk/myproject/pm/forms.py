@@ -1,7 +1,9 @@
+ # -*- coding: utf-8 -*-
 import re
 
 from django import newforms as forms
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from models import MessageBox
@@ -30,6 +32,17 @@ class DraftMessageForm(forms.Form):
                       required=False,
                       widget=forms.widgets.HiddenInput()
                       )
+    redirect = forms.CharField(
+                      required=False,
+                      widget=forms.widgets.HiddenInput()
+                      )
+            
+class ReplyMessageForm(DraftMessageForm):
+    def __init__(self, **kwargs):
+        super(ReplyMessageForm, self).__init__(**kwargs)
+        self.fields['subject'].widget.attrs.update({'disabled': 'disabled'})
+        self.fields['recipient_list'].widget = forms.widgets.HiddenInput()
+        
 
 
 class NewMessageForm(DraftMessageForm):
@@ -65,11 +78,19 @@ class NewMessageForm(DraftMessageForm):
         return body 
         
     def clean_previous_message(self):
-        try:
-            previous_message = MessageBox.objects.get(pk=self.cleaned_data['previous_message'])
-        except MessageBox.DoesNotExist:
-            previous_message = None
+        previous_message = None
+        if self.cleaned_data['previous_message']:
+            try:
+                previous_message = MessageBox.objects.get(pk=self.cleaned_data['previous_message'])
+            except MessageBox.DoesNotExist:
+                pass
         return previous_message
-        
+    
+    def clean_redirect(self):
+        redirect = self.cleaned_data['redirect']
+        if not redirect:
+            redirect = reverse('pm_inbox')
+        return redirect
+
         
         
