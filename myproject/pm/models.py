@@ -101,7 +101,7 @@ class BoxManager(models.Manager):
     def get_accessor_name(self):
         "Returns the messagebox related manager name"
         if not hasattr(self, 'core_filters'):
-            raise AttributeError, _("Method is only accessible via RelatedManager instances")
+            raise AttributeError, _("Method is only accessible through RelatedManager instances")
         if self.core_filters.has_key('recipient__pk'):
             return 'inbox'
         elif self.core_filters.has_key('previous_message__pk'):
@@ -214,21 +214,21 @@ class BoxManager(models.Manager):
     def for_read_outbox_view(self):
         "Filters deleted messages for the next_messages related manager in read_outbox.html"
         if self.get_accessor_name() != 'next_messages':
-            raise AttributeError, _("Method only available to the next_messages RelatedManager")
+            raise AttributeError, _("Method only available for the next_messages RelatedManager")
         self.core_filters['recipient_delete_at__isnull'] = True
         return self.get_query_set()
     
     def for_read_inbox_view(self):
         "Filters deleted messages for the next_messages related manager in read_inbox.html"
         if self.get_accessor_name() != 'next_messages':
-            raise AttributeError, _("Method only available to the next_messages RelatedManager")
+            raise AttributeError, _("Method only available for the next_messages RelatedManager")
         self.core_filters['sender_delete_at__isnull'] = True
         return self.get_query_set()
     
     def new(self):
         "Returns new messages for the inbox"
         if self.get_accessor_name() != 'inbox':
-            raise AttributeError, _("Method only available to the inbox RelatedManager")
+            raise AttributeError, _("Method only available for the inbox RelatedManager")
         self.core_filters['read_at__isnull'] = True
         return self.get_query_set()
 
