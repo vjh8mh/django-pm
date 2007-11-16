@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from django.conf.urls.defaults import *
 from django.utils.translation import ugettext as _
 
