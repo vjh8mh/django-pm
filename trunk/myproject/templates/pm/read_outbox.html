@@ -20,6 +20,7 @@
 <li><a href="{% url pm_outbox_redirect_contact object.id,object.recipient %}">one message down to {{ object.recipient.username|capfirst }}</a></li>
 <li><a href="{% url pm_outbox_redirect_list object.id %}">back to outbox</a></li>
 <li><a href="{% url pm_outbox_redirect_list_contact object.id,object.recipient.username %}">back to messages sent to {{ object.recipient.username|capfirst }}</a></li>
+<li><a href="{% url pm_new %}?recipient={{ object.recipient }}">send another reply to {{ object.recipient.username|capfirst }}</a></li>
 </ul>
 
 {% if replies %}
@@ -31,5 +32,4 @@
 </table>
 {% endif %}
 
-<p></p>
 {% endblock %}
