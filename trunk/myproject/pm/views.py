@@ -276,6 +276,8 @@ def edit_contact(request, username, action='block'):
     
     contact = get_object_or_404(request.user.contacts.exclude(contact=request.user), contact__username=username)
     contact_username = contact.contact.username.capitalize()
+    
+    redirect = request.GET.get('next', None)
 
     if action == 'delete':
         notification(request, _('%(user)s was removed from your contact list%(blocked)s.') % {
@@ -288,11 +290,13 @@ def edit_contact(request, username, action='block'):
         if action == 'block':
             contact.is_blocked = True
             notice_message = _('%s cannot contact you anymore.') % contact_username
-            link_url = reverse('pm_contact_unblock', args=[contact.contact.username])         
+            link_url = '%s%s' % (reverse('pm_contact_unblock', args=[contact.contact.username]),
+                                 redirect and '?next=%s' % redirect or '')
         else:
             contact.is_blocked = False
             notice_message = _('%s is now allowed to contact you.') % contact_username
-            link_url = reverse('pm_contact_block', args=[contact.contact.username])    
+            link_url = '%s%s' % (reverse('pm_contact_block', args=[contact.contact.username]),
+                                 redirect and '?next=%s' % redirect or '')  
         contact.save()
         
     notification(request,
@@ -301,8 +305,8 @@ def edit_contact(request, username, action='block'):
            link_url = link_url,
            link_text = _('undo'),
            )
-    
-    return HttpResponseRedirect(reverse('pm_contact'))
+
+    return HttpResponseRedirect(redirect or reverse('pm_contact'))
 
 
 
