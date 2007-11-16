@@ -188,7 +188,7 @@ class BoxManager(models.Manager):
                 # back to first page
                 page_num = 1
             else:
-                # last page
+                # back to last page
                 page_num = self.get_page(id)
                 if page_num > 1:
                     page = '?page=%d' % page_num
@@ -310,8 +310,7 @@ class MessageBox(models.Model):
             contact_user = self.sender
         else:
             return None
-        contact, c = Contact.objects.get_or_create(owner=user, contact=contact_user)
-        return contact
+        return Contact.objects.get_or_create(owner=user, contact=contact_user)[0]
     
     def set_previous_message(self, user):
         "Removes the previous message if it was deleted by the user"
@@ -361,7 +360,7 @@ class MessageBox(models.Model):
                 sender_contact.is_blocked = False
                 sender_contact.save()
                 
-        super(MessageBox, self).save()        
+        super(MessageBox, self).save()
 
         
     @permalink
