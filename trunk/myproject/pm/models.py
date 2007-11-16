@@ -224,6 +224,13 @@ class BoxManager(models.Manager):
             raise AttributeError, _("Method only available to the next_messages RelatedManager")
         self.core_filters['sender_delete_at__isnull'] = True
         return self.get_query_set()
+    
+    def new(self):
+        "Returns new messages for the inbox"
+        if self.get_accessor_name() != 'inbox':
+            raise AttributeError, _("Method only available to the inbox RelatedManager")
+        self.core_filters['read_at__isnull'] = True
+        return self.get_query_set()
 
      
 class DraftMessage(models.Model):
