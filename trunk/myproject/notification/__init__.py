@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 def notification(request, message, **kwargs):
     """
@@ -12,7 +12,7 @@ def notification(request, message, **kwargs):
     
     Twisted usage:
     --------------
-    Define your notice template in the ``notification.context_processors.NOTICE_LAYOUTS`` dict:
+    Define your notice template in the ``notification.context_processors.NOTICE_TEMPLATES`` dict:
     {
     'notice_link': '<li class="%(css_class)s">%(message)s <a href="%(link_url)s">%(link_text)s</a></li>',
     }
