@@ -49,7 +49,7 @@ class NewMessageForm(DraftMessageForm):
     
     def clean_recipient_list(self):
         "Returns a set of valid User instances."
-        rcpt_list = self.cleaned_data['recipient_list'].lower()
+        rcpt_list = self.cleaned_data['recipient_list']
         
         if not rcpt_list:
             raise forms.ValidationError(self.fields['recipient_list'].error_messages['required'])
@@ -59,13 +59,16 @@ class NewMessageForm(DraftMessageForm):
         
         if len(self.valid_recipients) == 0:
             raise forms.ValidationError(ugettext("Couldn't find any of your recipients."))
-        return [u for u in self.valid_recipients.values()]
+        return self.valid_recipients.values()
 
     def _validate_user(self, m):
         try:
             user = User.objects.get(username=m.group(1))
         except User.DoesNotExist:
-            return
+            try:
+                user = User.objects.get(username__iexact=m.group(1))
+            except AssertionError, User.DoesNotExist:
+                return
         self.valid_recipients[user.id] = user
         
     def clean_subject(self):

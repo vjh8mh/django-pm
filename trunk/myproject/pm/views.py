@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404
 from django.views.generic.simple import direct_to_template
 from django.views.generic.list_detail import object_detail, object_list
 from django.utils.translation import ungettext, ugettext as _
+from django.contrib.auth import REDIRECT_FIELD_NAME
 
 from models import Contact, Message, DraftMessage, MessageBox, PAGINATE_BY
 from forms import DraftMessageForm, ReplyMessageForm, NewMessageForm
@@ -277,7 +278,7 @@ def edit_contact(request, username, action='block'):
     contact = get_object_or_404(request.user.contacts.exclude(contact=request.user), contact__username=username)
     contact_username = contact.contact.username.capitalize()
     
-    redirect = request.GET.get('next', None)
+    redirect = request.GET.get(REDIRECT_FIELD_NAME, None)
 
     if action == 'delete':
         notification(request, _('%(user)s was removed from your contact list%(blocked)s.') % {
@@ -291,12 +292,12 @@ def edit_contact(request, username, action='block'):
             contact.is_blocked = True
             notice_message = _('%s cannot contact you anymore.') % contact_username
             link_url = '%s%s' % (reverse('pm_contact_unblock', args=[contact.contact.username]),
-                                 redirect and '?next=%s' % redirect or '')
+                                 redirect and '?%s=%s' % (REDIRECT_FIELD_NAME, redirect) or '')
         else:
             contact.is_blocked = False
             notice_message = _('%s is now allowed to contact you.') % contact_username
             link_url = '%s%s' % (reverse('pm_contact_block', args=[contact.contact.username]),
-                                 redirect and '?next=%s' % redirect or '')  
+                                 redirect and '?%s=%s' % (REDIRECT_FIELD_NAME, redirect) or '') 
         contact.save()
         
     notification(request,

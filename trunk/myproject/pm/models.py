@@ -104,19 +104,19 @@ class BoxManager(models.Manager):
             raise AttributeError, _("Method is only accessible through RelatedManager instances")
         if self.core_filters.has_key('recipient__pk'):
             return 'inbox'
-        elif self.core_filters.has_key('previous_message__pk'):
-            return 'next_messages'
         elif self.core_filters.has_key('sender__pk'):
             if self.model == MessageBox:
                 return 'outbox'
-            elif self.model == DraftMessage:
+            else:
                 return 'drafts'
+        elif self.core_filters.has_key('previous_message__pk'):
+            return 'next_messages'
         raise AttributeError, _("Method not available for this RelatedManager")
     
     def get_query_set(self):
         "Filters queryset if accessed through a RelatedManager"
         try:
-            # Remove deleted messages
+            # Check related manager access
             self.get_accessor_name()
             return HideDeletedQuerySet(self.model)
         except AttributeError:
@@ -133,7 +133,26 @@ class BoxManager(models.Manager):
             else:
                 key = 'recipient_list__icontains'
             self.core_filters.update({key: username})
+
+    def _isnull_filter(self, manager, field):
+        "Returns a query set with a field__isnull filter"
+        if self.get_accessor_name() != manager:
+            raise AttributeError, _("Method only available for the %s RelatedManager") % manager
+        self.core_filters['%s__isnull' % field] = True
+        return self.get_query_set()
+        
+    def for_read_outbox_view(self):
+        "Filters deleted messages for the next_messages related manager in read_outbox.html"
+        return self._isnull_filter('next_messages', 'recipient_delete_at')
     
+    def for_read_inbox_view(self):
+        "Filters deleted messages for the next_messages related manager in read_inbox.html"
+        return self._isnull_filter('next_messages', 'sender_delete_at')
+    
+    def new(self):
+        "Returns new messages for the inbox"
+        return self._isnull_filter('inbox', 'read_at')
+        
     def restore_deleted_messages(self, time_delete, user):
         # Bypass deleted messages filtering
         role = self.get_accessor_name() == 'inbox' and 'recipient' or 'sender'
@@ -210,27 +229,6 @@ class BoxManager(models.Manager):
         if page > 1:
             reverse_url = '%s?page=%d' % (reverse_url, page)
         return reverse_url
-
-    def for_read_outbox_view(self):
-        "Filters deleted messages for the next_messages related manager in read_outbox.html"
-        if self.get_accessor_name() != 'next_messages':
-            raise AttributeError, _("Method only available for the next_messages RelatedManager")
-        self.core_filters['recipient_delete_at__isnull'] = True
-        return self.get_query_set()
-    
-    def for_read_inbox_view(self):
-        "Filters deleted messages for the next_messages related manager in read_inbox.html"
-        if self.get_accessor_name() != 'next_messages':
-            raise AttributeError, _("Method only available for the next_messages RelatedManager")
-        self.core_filters['sender_delete_at__isnull'] = True
-        return self.get_query_set()
-    
-    def new(self):
-        "Returns new messages for the inbox"
-        if self.get_accessor_name() != 'inbox':
-            raise AttributeError, _("Method only available for the inbox RelatedManager")
-        self.core_filters['read_at__isnull'] = True
-        return self.get_query_set()
 
      
 class DraftMessage(models.Model):

@@ -21,6 +21,7 @@
 <li><a href="{% url pm_outbox_redirect_list object.id %}">back to outbox</a></li>
 <li><a href="{% url pm_outbox_redirect_list_contact object.id,object.recipient.username %}">back to messages sent to {{ object.recipient.username|capfirst }}</a></li>
 <li><a href="{% url pm_new %}?recipient={{ object.recipient }}">send another reply to {{ object.recipient.username|capfirst }}</a></li>
+{% if contact %}{% for url, text in contact.get_block_link_tuple %}<li><a href="{{ url }}?next={{ request.get_full_path }}">{{ text }}</a></li>{% endfor %}{% endif %}
 </ul>
 
 {% if replies %}
