@@ -22,7 +22,7 @@
 <li><a href="{% url pm_inbox_redirect_up_contact object.id,object.sender %}">one message up from {{ object.sender.username|capfirst }}</a></li>
 <li><a href="{% url pm_inbox_redirect_contact object.id,object.sender %}">one message down from {{ object.sender.username|capfirst }}</a></li>
 <li><a href="{% url pm_inbox_redirect_list_contact object.id,object.sender.username %}">back to messages from {{ object.sender.username|capfirst }}</a></li>
-{% if contact %}{% for url, text in contact.get_block_link_tuple %}<li><a href="{{ url }}">{{ text }}</a></li>{% endfor %}{% endif %}
+{% if contact %}{% for url, text in contact.get_block_link_tuple %}<li><a href="{{ url }}?next={{ request.get_full_path }}">{{ text }}</a></li>{% endfor %}{% endif %}
 </ul>
 
 {% if replies %}
